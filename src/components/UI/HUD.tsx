@@ -211,8 +211,14 @@ export function HUD() {
 
                         {/* Calories */}
                         <div className="bg-black/40 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg flex justify-between items-center">
-                            <div className="text-xs font-bold text-gray-300 uppercase tracking-wider">Calories</div>
+                            <div className="text-xs font-bold text-gray-300 uppercase tracking-wider">Burned</div>
                             <div className="text-xl font-black text-orange-400">{Math.round(metrics.calories)} <span className="text-xs font-normal text-gray-400">kcal</span></div>
+                        </div>
+
+                        {/* Calories Collected */}
+                        <div className="bg-black/40 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg flex justify-between items-center">
+                            <div className="text-xs font-bold text-gray-300 uppercase tracking-wider">Collected</div>
+                            <div className="text-xl font-black text-green-400">+{metrics.caloriesCollected || 0} <span className="text-xs font-normal text-gray-400">kcal</span></div>
                         </div>
                     </div>
 

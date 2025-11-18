@@ -6,9 +6,9 @@ import { useGameStore } from '../../store/gameStore'
 import { getTrackOffset } from '../../logic/TrackLogic'
 import * as THREE from 'three'
 
-const SEGMENT_LENGTH = 20
-const DRAW_DISTANCE = 12 // Segments ahead
-const BACK_BUFFER = 3 // Segments behind
+const SEGMENT_LENGTH = 40 // Increased to reduce update frequency
+const DRAW_DISTANCE = 8 // Reduced count since length doubled (was 12)
+const BACK_BUFFER = 2 // Reduced count (was 3)
 
 // Shared Geometries and Materials to prevent recreation
 const groundGeo = new THREE.PlaneGeometry(200, SEGMENT_LENGTH)

@@ -1,4 +1,4 @@
-import { Environment, Sky, Cloud, Clouds } from '@react-three/drei'
+import { Sky, Cloud, Clouds } from '@react-three/drei'
 import * as THREE from 'three'
 
 export function Scene() {
@@ -21,7 +21,7 @@ export function Scene() {
                 <Cloud seed={2} scale={1} volume={3} color="white" fade={100} position={[20, 10, -20]} />
             </Clouds>
 
-            <Environment preset="forest" />
+            <hemisphereLight intensity={0.5} groundColor="#2d4c1e" />
         </>
     )
 }

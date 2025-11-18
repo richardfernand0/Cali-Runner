@@ -2,13 +2,13 @@ import { useMemo } from 'react'
 import { getRandomFoodItem } from '../../logic/NutritionEngine'
 import { Item } from '../Items/Item'
 
+const SEGMENT_LENGTH = 40 // Increased from 20
 const TRAIL_WIDTH = 10
-const SEGMENT_LENGTH = 20
 const TREE_COUNT = 5
 const ITEM_COUNT = 3
 
 export function Segment({
-    position, rotation, renderVisuals = true,
+    position, rotation, index, renderVisuals = true,
     groundGeo, trailGeo, groundMat, trailMat
 }: {
     position: [number, number, number],
@@ -63,7 +63,12 @@ export function Segment({
 
             {/* Items */}
             {items.map((data, i) => (
-                <Item key={`item-${i}`} item={data.item} position={data.position} />
+                <Item
+                    key={i}
+                    item={data.item}
+                    position={data.position}
+                    segmentZ={index * SEGMENT_LENGTH}
+                />
             ))}
         </group>
     )

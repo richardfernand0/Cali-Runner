@@ -7,6 +7,7 @@ export interface GameMetrics {
     calories: number // 0-1000+ (Burned)
     hydration: number // 0-100 (Percentage)
     energy: number // 0-100 (Percentage)
+    caloriesCollected?: number // New metric
 }
 
 interface GameState {
@@ -33,9 +34,10 @@ interface GameState {
 export const useGameStore = create<GameState>((set) => ({
     status: 'idle',
     metrics: {
-        calories: 0,
+        calories: 0, // Burned
         hydration: 100,
         energy: 100,
+        caloriesCollected: 0 // New metric
     },
     score: 0,
     distance: 0,
@@ -49,16 +51,18 @@ export const useGameStore = create<GameState>((set) => ({
     endGame: () => set({ status: 'ended' }),
     resetGame: () => set({
         status: 'idle',
-        metrics: { calories: 0, hydration: 100, energy: 100 },
+        metrics: { calories: 0, hydration: 100, energy: 100, caloriesCollected: 0 },
         score: 0,
         distance: 0,
         lane: 0,
         collectedItems: []
     }),
 
-    collectItem: (item: any) => set((state) => { // Changed item type to 'any' as per GameState interface
+    collectItem: (item: any) => set((state) => {
         const newMetrics = {
-            calories: state.metrics.calories + item.calories,
+            ...state.metrics,
+            // Don't add to 'calories' (burned), add to 'caloriesCollected'
+            caloriesCollected: (state.metrics.caloriesCollected || 0) + item.calories,
             hydration: Math.min(100, Math.max(0, state.metrics.hydration + item.hydration)),
             energy: Math.min(100, Math.max(0, state.metrics.energy + item.energy))
         }
