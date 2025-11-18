@@ -10,54 +10,39 @@ export function Item({ item, position }: { item: FoodItem, position: [number, nu
     const playerZ = useGameStore((state) => state.distance)
     const playerLane = useGameStore((state) => state.lane)
 
-    useFrame(() => {
+    useFrame((state) => {
         if (collected || !ref.current) return
 
-        // Rotate item
-        ref.current.rotation.y += 0.02
+        // Rotate item - use time for smooth rotation independent of frame rate
+        ref.current.rotation.y = state.clock.elapsedTime * 2
 
-        // Simple collision detection
-        // Player is at Z = -distance
-        // Item is at Z = position[2] (which is local to segment, but segment is at -segmentZ)
-        // Wait, Segment passes world position? No, Segment is at world position.
-        // Item position is relative to Segment.
-        // So World Item Z = SegmentZ + ItemLocalZ
-        // SegmentZ is passed as position prop to Segment? No.
-        // Segment is <group position={position}>.
-        // So Item World Position = group.position + item.position.
+        // Optimization: Only check collision if player is close enough in Z
+        // Player Z is -playerZ. Item Z is roughly -playerZ + relativeZ.
+        // We can just check world distance.
 
-        // Actually, checking world distance is easier if we know where the player is.
-        // Player X = lane * 3.33
-        // Player Z = -distance
-        // Player Y = 1 (or more if jumping)
-
-        // We need the world position of this item.
-        // Since we can't easily get world position without `getWorldPosition` which is expensive every frame,
-        // let's calculate it based on parent segment.
-        // But Item doesn't know parent segment position easily without props.
-        // Let's assume the passed `position` is relative to the Segment.
-        // And we need to know the Segment's Z.
-        // This is getting complicated for a decentralized approach.
-
-        // Alternative: Player checks collisions.
-        // But Player doesn't know about items.
-
-        // Let's use `getWorldPosition` for now, it's fine for a prototype with < 100 items.
-        const worldPos = ref.current.getWorldPosition(new THREE.Vector3())
-
-        const playerX = playerLane * 3.33
         const playerZPos = -playerZ
 
-        const dx = worldPos.x - playerX
+        // Quick Z check before expensive world position calculation
+        // We don't know item world Z easily without calculation, but we can guess.
+        // Actually, getWorldPosition is not THAT expensive for < 50 items.
+        // But let's throttle it? No, collision needs to be precise.
+
+        // Let's just optimize the math.
+        const worldPos = ref.current.getWorldPosition(new THREE.Vector3())
         const dz = worldPos.z - playerZPos
-        const dy = worldPos.y - 1 // Player Y is ~1
 
-        // Distance check (squared to avoid sqrt)
-        const distSq = dx * dx + dz * dz + dy * dy
+        // Only check full collision if Z difference is small
+        if (Math.abs(dz) < 2) {
+            const playerX = playerLane * 3.33
+            const dx = worldPos.x - playerX
+            const dy = worldPos.y - 1
 
-        if (distSq < 2) { // Threshold
-            collectItem(item)
-            setCollected(true)
+            const distSq = dx * dx + dz * dz + dy * dy
+
+            if (distSq < 2) {
+                collectItem(item)
+                setCollected(true)
+            }
         }
     })
 

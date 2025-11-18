@@ -10,7 +10,7 @@ export function Scene() {
                 position={[10, 20, 10]}
                 intensity={1.5}
                 castShadow
-                shadow-mapSize={[2048, 2048]}
+                shadow-mapSize={[1024, 1024]}
             />
             <fog attach="fog" args={['#87CEEB', 20, 90]} />
 

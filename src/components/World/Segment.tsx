@@ -7,7 +7,19 @@ const SEGMENT_LENGTH = 20
 const TREE_COUNT = 5
 const ITEM_COUNT = 3
 
-export function Segment({ position, rotation, renderVisuals = true }: { position: [number, number, number], rotation: [number, number, number], index: number, renderVisuals?: boolean }) {
+export function Segment({
+    position, rotation, renderVisuals = true,
+    groundGeo, trailGeo, groundMat, trailMat
+}: {
+    position: [number, number, number],
+    rotation: [number, number, number],
+    index: number,
+    renderVisuals?: boolean,
+    groundGeo?: any,
+    trailGeo?: any,
+    groundMat?: any,
+    trailMat?: any
+}) {
     // Memoize items only
     const { items } = useMemo(() => {
         const foodItems = []
@@ -27,15 +39,26 @@ export function Segment({ position, rotation, renderVisuals = true }: { position
     return (
         <group position={position} rotation={rotation}>
             {/* Ground - Much Wider for infinite look */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                <planeGeometry args={[200, SEGMENT_LENGTH]} />
-                <meshStandardMaterial color="#2d4c1e" />
+            <mesh
+                rotation={[-Math.PI / 2, 0, 0]}
+                receiveShadow
+                geometry={groundGeo}
+                material={groundMat}
+            >
+                {!groundGeo && <planeGeometry args={[200, SEGMENT_LENGTH]} />}
+                {!groundMat && <meshStandardMaterial color="#2d4c1e" />}
             </mesh>
 
             {/* Trail Path */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-                <planeGeometry args={[TRAIL_WIDTH, SEGMENT_LENGTH]} />
-                <meshStandardMaterial color="#8b5a2b" />
+            <mesh
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, 0.01, 0]}
+                receiveShadow
+                geometry={trailGeo}
+                material={trailMat}
+            >
+                {!trailGeo && <planeGeometry args={[TRAIL_WIDTH, SEGMENT_LENGTH]} />}
+                {!trailMat && <meshStandardMaterial color="#8b5a2b" />}
             </mesh>
 
             {/* Items */}
