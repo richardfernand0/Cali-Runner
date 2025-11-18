@@ -1,6 +1,8 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { useGameStore } from '../../store/gameStore'
+import { getTrackOffset } from '../../logic/TrackLogic'
 import type { FoodItem } from '../../logic/NutritionEngine'
 
 export function Item({ item, position, segmentZ }: { item: FoodItem, position: [number, number, number], segmentZ: number }) {
@@ -10,43 +12,85 @@ export function Item({ item, position, segmentZ }: { item: FoodItem, position: [
     const playerZ = useGameStore((state) => state.distance)
     const playerLane = useGameStore((state) => state.lane)
 
-    useFrame((state) => {
-        if (collected || !ref.current) return
+    // Generate Emoji Texture
+    const texture = useMemo(() => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 128
+        canvas.height = 128
+        const context = canvas.getContext('2d')
+        if (context) {
+            context.font = '96px serif'
+            context.textAlign = 'center'
+            context.textBaseline = 'middle'
+            context.fillText(item.emoji, 64, 70) // Slight offset for centering
+        }
+        const tex = new THREE.CanvasTexture(canvas)
+        tex.colorSpace = THREE.SRGBColorSpace
+        return tex
+    }, [item.emoji])
 
-        // Rotate item
-        ref.current.rotation.y = state.clock.elapsedTime * 2
+    useFrame((state, delta) => {
+        if (!ref.current) return
+
+        if (collected) {
+            // Animation: Scale up and fade out
+            ref.current.scale.x += delta * 5
+            ref.current.scale.y += delta * 5
+            ref.current.position.y += delta * 2
+
+            // Fade out (requires transparent material)
+            const material = ref.current.children[0].material
+            if (material) {
+                material.opacity -= delta * 3
+                if (material.opacity <= 0) {
+                    // Fully invisible, effectively gone.
+                    // We don't unmount to avoid React tree thrashing, just hide.
+                    ref.current.visible = false
+                }
+            }
+            return
+        }
+
+        // Bobbing animation
+        ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.2
+
+        // Always face camera (billboard effect)
+        ref.current.lookAt(state.camera.position)
 
         // Analytical Collision Detection
-        // World Z of item is roughly: -segmentZ + position[2]
-        // This ignores the curve rotation's effect on Z, but for collision "trigger" it's close enough to start checking.
         const itemWorldZApprox = -segmentZ + position[2]
-        const playerZPos = -playerZ // Player is at -distance
+        const playerZPos = -playerZ
 
-        // Only do expensive check if we are close in Z
-        if (Math.abs(itemWorldZApprox - playerZPos) < 5) {
-            // Now we can do the precise check
+        // Increased Z-threshold to catch fast movement
+        if (Math.abs(itemWorldZApprox - playerZPos) < 10) {
             const worldPos = ref.current.getWorldPosition(new THREE.Vector3())
-            const dx = worldPos.x - (playerLane * 3.33)
-            const dz = worldPos.z - playerZPos
-            const dy = worldPos.y - 1
 
-            if (dx * dx + dz * dz + dy * dy < 2) {
+            // Calculate Player's ACTUAL World Position (including curve)
+            const { x: playerCurveX } = getTrackOffset(playerZPos)
+            const playerWorldX = (playerLane * 3.33) + playerCurveX
+
+            const dx = worldPos.x - playerWorldX
+            const dz = worldPos.z - playerZPos
+            const dy = worldPos.y - 1 // Player center Y is roughly 1
+
+            // Collision radius 2.5
+            if (dx * dx + dz * dz + dy * dy < 2.5) {
                 collectItem(item)
                 setCollected(true)
             }
         }
     })
 
-    if (collected) return null
+    // Don't return null immediately, let animation play
+    // if (collected) return null
 
     return (
         <group position={position} ref={ref}>
-            <mesh castShadow>
-                <sphereGeometry args={[0.3, 16, 16]} />
-                <meshStandardMaterial color={item.color} />
-            </mesh>
+            <sprite scale={[1.5, 1.5, 1.5]}>
+                <spriteMaterial map={texture} transparent opacity={1} />
+            </sprite>
+            {/* Add a subtle glow/light matching the item color */}
+            {!collected && <pointLight color={item.color} intensity={0.5} distance={3} decay={2} />}
         </group>
     )
 }
-
-import * as THREE from 'three'

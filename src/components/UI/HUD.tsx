@@ -44,7 +44,10 @@ export function HUD() {
                             <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent max-h-48">
                                 {collectedItems.map((item, i) => (
                                     <div key={i} className="flex justify-between items-center text-sm bg-white/5 p-2 rounded-lg border border-white/5">
-                                        <span className="font-medium">{item.name}</span>
+                                        <span className="font-medium flex items-center gap-2">
+                                            <span className="text-lg">{item.emoji}</span>
+                                            {item.name}
+                                        </span>
                                         <span className={`font-bold ${item.calories > 100 ? 'text-red-400' : 'text-green-400'}`}>
                                             {item.calories > 0 ? `+${item.calories}` : ''}
                                         </span>
@@ -100,8 +103,8 @@ export function HUD() {
                         {FOOD_ITEMS.map(item => (
                             <div key={item.id} className="bg-gray-800/50 p-6 rounded-2xl border border-white/5 hover:border-white/20 transition group backdrop-blur-sm">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-2xl transform group-hover:scale-110 transition" style={{ backgroundColor: item.color }}>
-                                        {/* Placeholder icon logic if we had icons, for now color block */}
+                                    <div className="w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-4xl transform group-hover:scale-110 transition bg-white/10 backdrop-blur-md border border-white/10">
+                                        {item.emoji}
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-xl text-white group-hover:text-green-400 transition">{item.name}</h3>
