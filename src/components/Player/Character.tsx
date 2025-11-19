@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
 
 import { useGameStore } from '../../store/gameStore'
 import { getTrackOffset } from '../../logic/TrackLogic'
@@ -9,7 +10,7 @@ const JUMP_FORCE = 8
 const GRAVITY = 20
 
 export function Character() {
-    const mesh = useRef<any>(null)
+    const group = useRef<any>(null)
     const lane = useGameStore((state) => state.lane)
     const setLane = useGameStore((state) => state.setLane)
 
@@ -40,7 +41,7 @@ export function Character() {
     }, [lane, isJumping, setLane])
 
     useFrame((_, delta) => {
-        if (!mesh.current) return
+        if (!group.current) return
 
         const distance = useGameStore.getState().distance
 
@@ -55,33 +56,62 @@ export function Character() {
         // 2. Calculate World Position based on Curve
         const { x: curveX, rotation } = getTrackOffset(-distance)
 
-        // 3. Apply to Mesh
-        // mesh.current.position.x = curveX + currentLaneX.current * Math.cos(rotation)
-        // mesh.current.position.z = -distance + currentLaneX.current * Math.sin(rotation) // Slight Z offset if banking? Actually just -distance is fine for simple runner
-        // Better:
-        mesh.current.position.x = curveX + currentLaneX.current + wobble
-        mesh.current.position.z = -distance
+        // 3. Apply to Group
+        group.current.position.x = curveX + currentLaneX.current + wobble
+        group.current.position.z = -distance
 
-        mesh.current.rotation.y = rotation
+        // Rotate the group to follow track
+        group.current.rotation.y = rotation
 
         // Jump physics
         if (isJumping) {
-            mesh.current.position.y += velocity * delta
+            group.current.position.y += velocity * delta
             setVelocity(prev => prev - GRAVITY * delta)
 
             // Ground collision
-            if (mesh.current.position.y <= 1) { // 1 is half height (2/2)
-                mesh.current.position.y = 1
+            if (group.current.position.y <= 1) { // 1 is half height (2/2)
+                group.current.position.y = 1
                 setVelocity(0)
                 setIsJumping(false)
             }
         }
     })
 
+    const status = useGameStore((state) => state.status)
+
     return (
-        <mesh ref={mesh} position={[0, 1, 0]} castShadow>
-            <capsuleGeometry args={[0.5, 1, 4, 8]} />
-            <meshStandardMaterial color="orange" />
-        </mesh>
+        <group ref={group} position={[0, 1, 0]}>
+            {/* 
+                Using Html transform to render the GIF. 
+                This ensures the GIF animation plays correctly.
+                'transform' makes it move with the 3D object.
+                'sprite' makes it always face the camera.
+            */}
+            <Html
+                transform
+                sprite
+                position={[0, 0.5, 0]}
+                style={{
+                    pointerEvents: 'none',
+                    display: status === 'playing' ? 'block' : 'none'
+                }}
+                zIndexRange={[100, 0]}
+            >
+                <div className="w-32 h-32 flex items-center justify-center">
+                    <img
+                        src="/character.gif"
+                        alt="character"
+                        className="w-full h-full object-contain drop-shadow-lg"
+                        style={{ imageRendering: 'pixelated' }}
+                    />
+                </div>
+            </Html>
+
+            {/* Shadow blob */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.8, 0]}>
+                <circleGeometry args={[0.4, 32]} />
+                <meshBasicMaterial color="black" transparent opacity={0.3} />
+            </mesh>
+        </group>
     )
 }

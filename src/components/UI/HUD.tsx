@@ -8,8 +8,59 @@ export function HUD() {
     const status = useGameStore((state) => state.status)
     const startGame = useGameStore((state) => state.startGame)
     const resetGame = useGameStore((state) => state.resetGame)
+    const resumeGame = useGameStore((state) => state.resumeGame)
 
     const collectedItems = useGameStore((state) => state.collectedItems)
+    const [showEncyclopedia, setShowEncyclopedia] = useState(false)
+
+    if (status === 'paused') {
+        return (
+            <div className="absolute inset-0 z-[50000000] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-white p-8">
+                <div className="bg-gray-900/90 p-8 rounded-3xl border border-white/10 shadow-2xl max-w-md w-full backdrop-blur-md text-center">
+                    <h1 className="text-4xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 uppercase tracking-tight">Paused</h1>
+
+                    <div className="space-y-4 mb-8">
+                        <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Current Run Stats</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div className="text-xs text-gray-500 uppercase">Score</div>
+                                    <div className="text-xl font-mono font-bold text-white">{score}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 uppercase">Distance</div>
+                                    <div className="text-xl font-mono font-bold text-blue-400">{Math.floor(metrics.calories * 2)}m</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 uppercase">Calories</div>
+                                    <div className="text-xl font-mono font-bold text-orange-400">{Math.round(metrics.calories)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 uppercase">Items</div>
+                                    <div className="text-xl font-mono font-bold text-green-400">{collectedItems.length}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <button
+                            onClick={resumeGame}
+                            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl font-black text-lg text-white hover:from-green-400 hover:to-green-500 transition transform hover:scale-105 shadow-lg shadow-green-900/50 border border-green-400/20 uppercase tracking-wide"
+                        >
+                            Resume
+                        </button>
+                        <button
+                            onClick={resetGame}
+                            className="px-8 py-3 bg-white/10 rounded-xl font-bold text-lg text-white hover:bg-white/20 transition border border-white/10 uppercase tracking-wide"
+                        >
+                            Exit Game
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     if (status === 'ended') {
         return (
@@ -83,7 +134,6 @@ export function HUD() {
         )
     }
 
-    const [showEncyclopedia, setShowEncyclopedia] = useState(false)
 
     if (showEncyclopedia) {
         return (
